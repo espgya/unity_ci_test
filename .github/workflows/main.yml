@@ -3,7 +3,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: gableroux/unity3d:2019.2.3f1-windows
+    container: gableroux/unity3d:2019.2.3f1-webgl
     steps:
         - name: Checkout Project
           uses: actions/checkout@v1
