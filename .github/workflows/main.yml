@@ -1,0 +1,71 @@
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: gableroux/unity3d:2019.2.3f1-windows
+    steps:
+        - name: Checkout Project
+          uses: actions/checkout@v1
+
+        - name: Decrypt the license file
+          run: openssl aes-256-cbc -d -in .github/Unity_v2019.x.ulf.enc -k ${{ secrets.UNITY_LICENSE_DECRYPT_KEY }} >> .github/Unity_v2019.x.ulf
+
+        # Activate unity
+        - name: Activate Unity
+          run: /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -manualLicenseFile .github/Unity_v2019.x.ulf || exit 0
+
+        - name: get path
+          run: pwd
+
+        - name: check path
+          run: ls
+
+        - name: add file
+          run: mkdir Build-WebGl && echo "bla" >> ./Build-WebGl/txt.txt
+
+        - name: check path2
+          run: ls ./Build-WebGl/
+
+#WebGL
+        # Build
+        - name: Build WebGL Player
+          run: /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -executeMethod BuildAndDeployGame.BuildScript.BuildWebGl
+
+        - name: get path
+          run: pwd
+
+        - name: check path
+          run: ls
+
+        - name: check ./Build-WebGl/
+          run: ls ./Build-WebGl/
+
+        # Publish
+        - name: Archive WebGL Build
+          uses: actions/upload-artifact@v1
+          with:
+            name: unity_ci_test_webgl
+            path: ./Build-WebGl/
+
+#Windows
+        # Build
+        - name: Build Windows Player
+          run: /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -buildWindows64Player ./bin-win64/unity_ci_test.exe
+
+        # Publish
+        - name: Archive Windows Build
+          uses: actions/upload-artifact@v1
+          with:
+            name: unity_ci_test_win64
+            path: ./bin-win64
+
+#OSX
+        #- name: Build OSX Player
+        #  run: /opt/Unity/Editor/Unity -quit -batchmode -nographics -silent-crashes -logFile -projectPath . -buildOSXUniversalPlayer ./bin-osx/unity_ci_test.app
+
+        #- name: Archive Mac Build
+        #  uses: actions/upload-artifact@v1
+        #  with:
+        #    name: CISampleOSXBinary
+        #    path: ./bin-osx
